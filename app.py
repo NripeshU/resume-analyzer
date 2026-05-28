@@ -1,6 +1,7 @@
 from flask_cors import CORS
 from flask import Flask, request, jsonify
 import PyPDF2
+from flask import send_from_directory
 
 app = Flask(__name__)
 CORS(app)
@@ -59,6 +60,10 @@ def extract_text_from_pdf(file):
         text += page.extract_text()
 
     return text
+
+@app.route('/')
+def home():
+    return send_from_directory('.', 'index.html')
 
 @app.route('/upload', methods=['POST'])
 def upload():
