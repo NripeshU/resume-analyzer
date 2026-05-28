@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Resume Analyzer</title>
+
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      background: linear-gradient(135deg, #141e30, #243b55);
+      color: white;
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 40px;
+    }
+
+    .bar-container {
+        width: 100%;
+        background: #ddd;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+
+    .bar {
+        height: 20px;
+        background: linear-gradient(90deg, #00c6ff, #0072ff);
+        border-radius: 8px;
+        transition: width 0.5s;
+    }
+
+    .container {
+      width: 70%;
+      margin: 30px auto;
+      background: white;
+      color: black;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+
+    .section {
+      margin-bottom: 20px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 150px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      resize: none;
+    }
+
+    input[type="file"] {
+      margin-bottom: 10px;
+    }
+
+    .buttons {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 12px 20px;
+      margin: 10px;
+      background: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    #output {
+      margin-top: 25px;
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    .score {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>AI Resume Analyzer</h1>
+
+  <div class="container">
+
+    <div class="section">
+      <label><b>Upload Resume (PDF)</b></label><br>
+      <input type="file" id="file">
+    </div>
+
+    <div class="section">
+      <label><b>Paste Resume</b></label>
+      <textarea id="resume" placeholder="Paste your resume here..."></textarea>
+    </div>
+
+    <div class="section">
+      <label><b>Job Description</b></label>
+      <textarea id="job" placeholder="Paste job description here..."></textarea>
+    </div>
+
+    <div class="buttons">
+      <button onclick="analyze()">Analyze Text</button>
+      <button onclick="upload()">Upload PDF</button>
+    </div>
+
+    <div id="output"></div>
+
+  </div>
+
+  <script>
+    async function analyze() {
+    const output = document.getElementById('output');
+    output.innerHTML = "Analyzing...";
+
+    try {
+        const res = await fetch('http://127.0.0.1:5000/analyze', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            resume: document.getElementById('resume').value,
+            job: document.getElementById('job').value
+        })
+        });
+
+        const data = await res.json();
+
+        output.innerHTML = `
+            <div class="score">Score: ${data.score}/100</div>
+            <div class="bar-container">
+                <div class="bar" style="width: ${data.score}%"></div>
+            </div>
+        `;
+
+        data.feedback.forEach(item => {
+        const p = document.createElement('p');
+
+        if (item.toLowerCase().includes("missing") || item.toLowerCase().includes("add")) {
+        p.style.color = "red";
+        } else if (item.toLowerCase().includes("matched")) {
+        p.style.color = "green";
+        } else {
+        p.style.color = "black";
+        }
+
+        p.innerText = "• " + item;
+        output.appendChild(p);
+        });
+
+    } catch (err) {
+        output.innerHTML = "ERROR: " + err;
+        console.error(err);
+    }
+    }
+
+    async function upload() {
+      const output = document.getElementById('output');
+      output.innerHTML = "Uploading & analyzing...";
+
+      const fileInput = document.getElementById('file');
+      const job = document.getElementById('job').value;
+
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+      formData.append('job', job);
+
+      const res = await fetch('http://127.0.0.1:5000/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await res.json();
+
+      output.innerHTML = "<div class='score'>Score: " + data.score + "/100</div>";
+
+      data.feedback.forEach(item => {
+        const p = document.createElement('p');
+        p.innerText = "• " + item;
+        output.appendChild(p);
+      });
+    }
+  </script>
+
+</body>
+</html>
