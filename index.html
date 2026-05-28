@@ -128,7 +128,7 @@
     output.innerHTML = "Analyzing...";
 
     try {
-        const res = await fetch('http://127.0.0.1:5000/analyze', {
+        const res = await fetch('/analyze', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
@@ -178,7 +178,7 @@
       formData.append('file', fileInput.files[0]);
       formData.append('job', job);
 
-      const res = await fetch('http://127.0.0.1:5000/upload', {
+      const res = await fetch('/upload', {
         method: 'POST',
         body: formData
       });
